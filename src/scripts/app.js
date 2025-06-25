@@ -5,6 +5,8 @@ import { AddStoryView } from './views/AddStoryView.js';
 import { LoginView } from './views/LoginView.js';
 import { AuthModel } from './models/AuthModel.js';
 import { NotificationModel } from './models/NotificationModel.js';
+import SavedStoriesView from './views/SavedStoriesView.js';
+import { registerRoutes } from './routes/router.js';
 
 class App {
     constructor() {
@@ -14,7 +16,7 @@ class App {
     }
 
     async init() {
-        this.setupRoutes();
+        registerRoutes(this.router, this);
         this.router.init();
         this.setupMobileMenu();
         this.updateAuthUI();
@@ -25,39 +27,7 @@ class App {
         }
     }
 
-    setupRoutes() {
-        this.router.addRoute('home', async () => {
-            const homeView = new HomeView();
-            await homeView.render();
-            this.updateAuthUI();
-        });
-
-        this.router.addRoute('stories', async () => {
-            const storiesView = new StoriesView();
-            await storiesView.render();
-            this.updateAuthUI();
-        });
-
-        this.router.addRoute('add-story', async () => {
-            const addStoryView = new AddStoryView();
-            await addStoryView.render();
-            this.updateAuthUI();
-        });
-
-        this.router.addRoute('login', async () => {
-            const loginView = new LoginView();
-            await loginView.render();
-            this.updateAuthUI();
-        });
-
-        this.router.addRoute('logout', async () => {
-            await this.handleLogout();
-        });
-
-        this.router.addRoute('', async () => {
-            this.router.navigate('home');
-        });
-    }    setupMobileMenu() {
+    setupMobileMenu() {
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         const navLinks = document.getElementById('nav-links');
         

@@ -10,6 +10,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Handle hash changes for routing
   window.addEventListener('hashchange', async () => {
-    await app.init();
+    await app.router.handleRouteChange();
   });
 });

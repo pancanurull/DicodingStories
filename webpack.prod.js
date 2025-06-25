@@ -29,8 +29,7 @@ module.exports = merge(common, {
       clientsClaim: true,
       skipWaiting: true,
       additionalManifestEntries: [ 
-        { url: '/index.html', revision: '1' },
-        { url: '/404.html', revision: '1' },
+        // Tidak ada entri manual, biarkan Workbox handle otomatis
       ],
       runtimeCaching: [
         {

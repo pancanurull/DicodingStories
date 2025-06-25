@@ -346,19 +346,90 @@
   color: #f093fb;
 }
 
+/* Saved Stories Card Custom Size */
+.saved-story-card {
+  background: var(--glass-bg);
+  border: 1.5px solid var(--glass-border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-light);
+  padding: 0 0 18px 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.18s, box-shadow 0.18s;
+  position: relative;
+  max-width: 100%;
+  margin: 0;
+  font-size: 0.97em;
+  min-height: 420px;
+  height: 100%;
+  /* Konsistensi shadow dan hover */
+  animation: fadeIn 0.3s ease forwards;
+  opacity: 0;
+}
+.saved-story-card:hover {
+  transform: translateY(-6px) scale(1.025);
+  box-shadow: 0 8px 32px rgba(120,119,198,0.18);
+}
+.saved-story-card .story-card-img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+  background: #222;
+}
+.saved-story-card .story-card-content {
+  padding: 18px 20px 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1 1 auto;
+}
+.saved-story-card .story-card-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+.saved-story-card .unsave-btn {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(255,107,107,0.13);
+  transition: background 0.2s, transform 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.saved-story-card .unsave-btn:hover {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  transform: translateY(-2px) scale(1.03);
+}
+.saved-story-card .unsave-btn i {
+  font-size: 1.2em;
+  margin-right: 4px;
+}
+
 /* Forms */
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
+.form-group {
+  margin-bottom: 1.5rem;
+}
 
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: white;
-        }
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: white;
+}
 
-        .form-input {
+.form-input {
             width: 100%;
             padding: 0.75rem;
             border: 1px solid var(--glass-border);
