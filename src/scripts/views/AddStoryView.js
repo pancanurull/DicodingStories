@@ -222,7 +222,7 @@ export class AddStoryView {
     showLoading() {
         const submitBtn = document.getElementById('submit-story');
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+        submitBtn.innerHTML = 'Mengirim...';
     }
 
     hideLoading() {

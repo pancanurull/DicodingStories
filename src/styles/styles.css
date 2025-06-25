@@ -112,6 +112,10 @@
             align-items: center;
         }
 
+        .nav-links a i {
+          margin-right: 0.5em;
+        }
+
         .nav-links a:hover,
         .nav-links a.active {
             background: var(--glass-bg);

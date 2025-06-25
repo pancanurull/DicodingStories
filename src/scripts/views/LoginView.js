@@ -48,7 +48,7 @@ export class LoginView {
     showLoginLoading() {
         const loginBtn = document.getElementById('login-button');
         loginBtn.disabled = true;
-        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Login</span>';
+        loginBtn.innerHTML = '<span>Login...</span>';
     }
 
     hideLoginLoading() {
@@ -60,7 +60,7 @@ export class LoginView {
     showRegisterLoading() {
         const registerBtn = document.getElementById('register-button');
         registerBtn.disabled = true;
-        registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mendaftar...';
+        registerBtn.innerHTML = 'Mendaftar...';
     }
 
     hideRegisterLoading() {
