@@ -1,2 +1,1 @@
-Netlify : https://dicoding-stories-page.netlify.app/
-Github : https://pancanurull.github.io/DicodingStory/
+Netlify : https://dicodingstoriesapp.netlify.app/
