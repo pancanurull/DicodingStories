@@ -330,118 +330,82 @@
                     });
             });
         }
-
-        // Tampilkan section add-story-page hanya jika hash adalah #add-story
-        window.addEventListener('hashchange', function() {
-            const addStorySection = document.getElementById('add-story-page');
-            if (window.location.hash === '#add-story') {
-                addStorySection.style.display = '';
-            } else {
-                addStorySection.style.display = 'none';
-            }
-        });
-        // Inisialisasi saat load pertama
-        window.addEventListener('DOMContentLoaded', function() {
-            const addStorySection = document.getElementById('add-story-page');
-            if (window.location.hash === '#add-story') {
-                addStorySection.style.display = '';
-            } else {
-                addStorySection.style.display = 'none';
-            }
-        });
-
-        // Toggle login/register form
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const showRegisterBtn = document.getElementById('show-register-btn');
-        const backToLoginBtn = document.getElementById('back-to-login');
-        const loginRegisterToggle = document.getElementById('login-register-toggle');
-
-        showRegisterBtn.addEventListener('click', function() {
-            loginForm.style.display = 'none';
-            registerForm.style.display = '';
-            loginRegisterToggle.style.display = 'none';
-        });
-        backToLoginBtn.addEventListener('click', function() {
-            loginForm.style.display = '';
-            registerForm.style.display = 'none';
-            loginRegisterToggle.style.display = '';
-        });
-
-        // Notifikasi toggle logic
+        
         const notifBtn = document.getElementById('notif-toggle-btn');
-        let notifActive = false;
-
-        function updateNotifBtn(state) {
-            notifActive = state;
-            notifBtn.innerHTML = notifActive ? '<i class="fas fa-bell"></i>' : '<i class="fas fa-bell-slash"></i>';
-            notifBtn.setAttribute('aria-label', notifActive ? 'Nonaktifkan Notifikasi' : 'Aktifkan Notifikasi');
+        
+        async function updateNotifBtnUI() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                const subs = await reg.pushManager.getSubscription();
+                
+                if (subs) {
+                    notifBtn.innerHTML = '<i class="fas fa-bell"></i>';
+                    notifBtn.setAttribute('aria-label', 'Nonaktifkan Notifikasi');
+                    notifBtn.dataset.subscribed = 'true';
+                } else {
+                    notifBtn.innerHTML = '<i class="fas fa-bell-slash"></i>';
+                    notifBtn.setAttribute('aria-label', 'Aktifkan Notifikasi');
+                    notifBtn.dataset.subscribed = 'false';
+                }
+            } catch (e) {
+                console.error('Error checking notification subscription on load:', e);
+                notifBtn.innerHTML = '<i class="fas fa-bell-slash"></i>';
+                notifBtn.dataset.subscribed = 'false';
+            }
         }
 
         notifBtn.addEventListener('click', async () => {
-        if (!('Notification' in window)) {
-            alert('Browser tidak mendukung notifikasi.');
-            return;
-        }
-        if (Notification.permission === 'denied') {
-            alert('Notifikasi diblokir. Silakan aktifkan di pengaturan browser.');
-            return;
-        }
+            if (!('Notification' in window)) {
+                alert('Browser tidak mendukung notifikasi.');
+                return;
+            }
 
-        notifBtn.disabled = true;
-        notifBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            if (Notification.permission === 'denied') {
+                alert('Notifikasi diblokir. Silakan aktifkan di pengaturan browser.');
+                return;
+            }
 
-        try {
-            if (!notifActive) {
-                // --- Proses Subscribe ---
-                const permission = await Notification.requestPermission();
-                if (permission !== 'granted') throw new Error('Izin notifikasi ditolak');
+            notifBtn.disabled = true;
+            notifBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
-                if (window.app) {
-                    await window.app.initNotifications();
-                    updateNotifBtn(true);
-                    alert('Berhasil berlangganan notifikasi!');
-                }
-            } else {
-                // --- Proses Unsubscribe (YANG DIPERBAIKI) ---
-                if ('serviceWorker' in navigator && window.app) {
-                    const registration = await navigator.serviceWorker.ready;
-                    const subscription = await registration.pushManager.getSubscription();
+            const isSubscribed = notifBtn.dataset.subscribed === 'true';
 
-                    if (subscription) {
-                        // 1. Beri tahu server untuk menghapus subscription
-                        await window.app.notificationModel.unsubscribeFromNotifications(subscription.endpoint);
-
-                        // 2. Hapus subscription dari browser
-                        await subscription.unsubscribe();
-
-                        updateNotifBtn(false);
+            try {
+                if (isSubscribed) {
+                    // --- Proses Unsubscribe ---
+                    if ('serviceWorker' in navigator && window.app) {
+                        const registration = await navigator.serviceWorker.ready;
+                        const subscription = await registration.pushManager.getSubscription();
+                        if (subscription) {
+                            await window.app.notificationModel.unsubscribeFromNotifications(subscription.endpoint);
+                            await subscription.unsubscribe();
+                        }
+                        await updateNotifBtnUI();
                         alert('Berhasil berhenti berlangganan notifikasi.');
                     }
+                } else {
+                    // --- Proses Subscribe ---
+                    const permission = await Notification.requestPermission();
+                    if (permission !== 'granted') throw new Error('Izin notifikasi ditolak');
+                    
+                    if (window.app) {
+                        await window.app.handleSubscribeClick(); // Panggil method baru di app.js
+                        await updateNotifBtnUI();
+                        alert('Berhasil berlangganan notifikasi!');
+                    }
                 }
-            }
-        } catch (error) {
-            console.error('Gagal mengubah status notifikasi:', error);
-            alert('Gagal mengubah status notifikasi: ' + error.message);
-            updateNotifBtn(notifActive); // Kembalikan state tombol jika gagal
-        } finally {
-            notifBtn.disabled = false;
-        }
-    });
-
-        // Inisialisasi status tombol saat load
-        window.addEventListener('DOMContentLoaded', async () => {
-            if ('serviceWorker' in navigator) {
-                try {
-                    const reg = await navigator.serviceWorker.ready;
-                    const subs = await reg.pushManager.getSubscription();
-                    updateNotifBtn(!!subs);
-                } catch(e) {
-                    console.error('Error checking notification subscription on load:', e);
-                    updateNotifBtn(false);
-                }
+            } catch (error) {
+                console.error('Gagal mengubah status notifikasi:', error);
+                alert('Gagal mengubah status notifikasi: ' + error.message);
+                await updateNotifBtnUI(); // Kembalikan UI tombol ke state yang benar
+            } finally {
+                notifBtn.disabled = false;
             }
         });
+
+        // Inisialisasi status tombol saat load
+        window.addEventListener('DOMContentLoaded', updateNotifBtnUI);
     </script>
     <script src="app.bundle.js"></script>
 </body>

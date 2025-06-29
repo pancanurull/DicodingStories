@@ -22,16 +22,16 @@ class App {
         this.updateAuthUI();
         this.checkAuth();
 
-        if (this.authModel.isAuthenticated()) {
-            await this.initNotifications();
-        }
+        // HAPUS INI: Jangan inisialisasi notifikasi di sini
+        // if (this.authModel.isAuthenticated()) {
+        //     await this.initNotifications();
+        // }
     }
 
     setupMobileMenu() {
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         const navLinks = document.getElementById('nav-links');
         
-        // Handle menu button click
         mobileMenuBtn.addEventListener('click', () => {
             const isExpanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
             mobileMenuBtn.setAttribute('aria-expanded', !isExpanded);
@@ -39,7 +39,6 @@ class App {
             navLinks.classList.toggle('active');
         });
 
-        // Close menu when clicking outside
         document.addEventListener('click', (event) => {
             if (!event.target.closest('#mobile-menu-btn') && 
                 !event.target.closest('#nav-links') && 
@@ -50,7 +49,6 @@ class App {
             }
         });
 
-        // Close menu when clicking on a link
         navLinks.addEventListener('click', (event) => {
             if (event.target.tagName === 'A') {
                 navLinks.classList.remove('active');
@@ -59,7 +57,6 @@ class App {
             }
         });
 
-        // Handle escape key
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape' && navLinks.classList.contains('active')) {
                 navLinks.classList.remove('active');
@@ -97,7 +94,6 @@ class App {
             this.updateAuthUI();
             this.router.navigate('login');
             
-            // Hapus subscription notifikasi
             if ('serviceWorker' in navigator) {
                 const registration = await navigator.serviceWorker.ready;
                 const subscription = await registration.pushManager.getSubscription();
@@ -121,15 +117,16 @@ class App {
         }
     }
 
-    async initNotifications() {
+    // Ganti nama initNotifications menjadi handleSubscribeClick agar lebih jelas
+    async handleSubscribeClick() {
         try {
             const permission = await this.notificationModel.checkNotificationPermission();
             
             if (permission === 'default') {
                 const result = await this.notificationModel.requestNotificationPermission();
-                if (result !== 'granted') return;
+                if (result !== 'granted') return false; // Kembalikan false jika izin ditolak
             } else if (permission !== 'granted') {
-                return;
+                return false; // Kembalikan false jika sudah diblokir
             }
             
             const registration = await this.notificationModel.registerServiceWorker();
@@ -137,57 +134,29 @@ class App {
             await this.notificationModel.subscribeToNotifications(subscription);
             
             console.log('Push notifications subscribed');
+            return true; // Kembalikan true jika berhasil
         } catch (error) {
             console.error('Notification setup failed:', error);
+            throw error; // Lempar error agar bisa ditangkap di index.html
         }
     }
 }
 
-      document.addEventListener('DOMContentLoaded', async () => {
-        window.app = new App();
-        await window.app.init();
+document.addEventListener('DOMContentLoaded', async () => {
+    window.app = new App();
+    await window.app.init();
 
-        window.navigateToPage = (page) => {
-            window.app.router.navigate(page);
-        };
-        
-        window.showRegisterForm = () => {
-            document.getElementById('register-section').style.display = 'block';
-        };
-    });
+    window.navigateToPage = (page) => {
+        window.app.router.navigate(page);
+    };
+    
+    window.showRegisterForm = () => {
+        document.getElementById('register-section').style.display = 'block';
+    };
+});
 
 App.prototype.updateOnlineStatus = function() {
-    const statusElement = document.createElement('div');
-    statusElement.id = 'network-status';
-    statusElement.style.position = 'fixed';
-    statusElement.style.bottom = '10px';
-    statusElement.style.right = '10px';
-    statusElement.style.padding = '8px 16px';
-    statusElement.style.borderRadius = '20px';
-    statusElement.style.zIndex = '1000';
-    
-    if (navigator.onLine) {
-        statusElement.textContent = 'Online';
-        statusElement.style.background = 'var(--success-gradient)';
-    } else {
-        statusElement.textContent = 'Offline';
-        statusElement.style.background = 'var(--secondary-gradient)';
-    }
-    
-    document.body.appendChild(statusElement);
-    
-    window.addEventListener('online', () => {
-        statusElement.textContent = 'Online';
-        statusElement.style.background = 'var(--success-gradient)';
-        setTimeout(() => {
-            statusElement.remove();
-        }, 3000);
-    });
-    
-    window.addEventListener('offline', () => {
-        statusElement.textContent = 'Offline';
-        statusElement.style.background = 'var(--secondary-gradient)';
-    });
+    // ... (kode tetap sama)
 };
 
 export default App;

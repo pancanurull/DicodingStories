@@ -9,51 +9,54 @@ export class NotificationModel {
     }
 
     async subscribeToNotifications(subscription) {
-    try {
-        const token = this.storageService.getToken();
-        if (!token) {
-            throw new Error('Anda harus login untuk menerima notifikasi.');
-        }
-
-        const subscriptionPayload = {
-            endpoint: subscription.endpoint,
-            keys: {
-                p256dh: subscription.toJSON().keys.p256dh,
-                auth: subscription.toJSON().keys.auth,
-            },
-        };
-
-        console.log('✅ [NotificationModel] Mengirim payload bersih ke API:', subscriptionPayload);
-
-        const response = await this.apiService.subscribeNotification(subscriptionPayload, token);
-
-        // TAMBAHKAN LOG INI UNTUK MELIHAT RESPON RAW DARI API
-        console.log('✅ [NotificationModel] Respon dari API:', response);
-
-        if (response.error) {
-            // Lempar error jika API mengembalikan status error
-            throw new Error(response.message || 'API mengembalikan error saat subscribe.');
-        }
-        
-        return response; // Langsung kembalikan response jika sukses
-    } catch (error) {
-        // Log error yang lebih spesifik
-        console.error('❌ [NotificationModel] Gagal total saat subscribe:', error.message);
-        throw error;
-    }
-}
-
-    async unsubscribeFromNotifications(endpoint) {
         try {
             const token = this.storageService.getToken();
             if (!token) {
-                return { success: false };
+                throw new Error('Anda harus login untuk menerima notifikasi.');
+            }
+
+            const subscriptionPayload = {
+                endpoint: subscription.endpoint,
+                keys: {
+                    p256dh: subscription.toJSON().keys.p256dh,
+                    auth: subscription.toJSON().keys.auth,
+                },
+            };
+
+            console.log('✅ [NotificationModel] Mengirim payload bersih ke API:', subscriptionPayload);
+
+            const response = await this.apiService.subscribeNotification(subscriptionPayload, token);
+
+            // TAMBAHKAN LOG INI UNTUK MELIHAT RESPON RAW DARI API
+            console.log('✅ [NotificationModel] Respon dari API:', response);
+
+            if (response.error) {
+                // Lempar error jika API mengembalikan status error
+                throw new Error(response.message || 'API mengembalikan error saat subscribe.');
+            }
+            
+            return response; // Langsung kembalikan response jika sukses
+        } catch (error) {
+            // Log error yang lebih spesifik
+            console.error('❌ [NotificationModel] Gagal total saat subscribe:', error.message);
+            throw error;
+        }
+    }
+
+    async unsubscribeFromNotifications(endpoint) {
+        try {
+            console.log('🔔 [NotificationModel] Attempting to unsubscribe...');
+            const token = this.storageService.getToken();
+            if (!token) {
+                console.log('🔑 No token found, cannot unsubscribe from server.');
+                return { success: false, message: 'User not logged in.' };
             }
 
             const response = await this.apiService.unsubscribeNotification({ endpoint }, token);
+            console.log('✅ [NotificationModel] Unsubscribe response from API:', response);
             return this.apiService.validateResponse(response);
         } catch (error) {
-            console.error('[Notification] Failed to unsubscribe:', error);
+            console.error('❌ [NotificationModel] Failed to unsubscribe:', error);
             throw error;
         }
     }
