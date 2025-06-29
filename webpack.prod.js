@@ -2,7 +2,8 @@ const common = require('./webpack.common.js');
 const { merge } = require('webpack-merge');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const { GenerateSW } = require('workbox-webpack-plugin');
+const { InjectManifest } = require('workbox-webpack-plugin');
+const path = require('path');
 
 module.exports = merge(common, {
   mode: 'production',
@@ -25,39 +26,11 @@ module.exports = merge(common, {
   plugins: [
     new CleanWebpackPlugin(),
     new MiniCssExtractPlugin(),
-    new GenerateSW({
-      clientsClaim: true,
-      skipWaiting: true,
-      additionalManifestEntries: [ 
-        // Tidak ada entri manual, biarkan Workbox handle otomatis
-      ],
-      runtimeCaching: [
-        {
-          urlPattern: /\.(?:js|css|html)$/,
-          handler: 'StaleWhileRevalidate',
-          options: { cacheName: 'static-assets' },
-        },
-        {
-          urlPattern: /\.(?:png|jpg|jpeg|svg|gif)$/,
-          handler: 'CacheFirst',
-          options: {
-            cacheName: 'images-cache',
-            expiration: { maxEntries: 50, maxAgeSeconds: 30 * 24 * 60 * 60 },
-          },
-        },
-        {
-          urlPattern: new RegExp('^https://story-api.dicoding.dev'),
-          handler: 'NetworkFirst',
-          options: {
-            cacheName: 'api-cache',
-            networkTimeoutSeconds: 10,
-            expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 },
-          },
-        },
-      ],
-        mode: 'production',
-        sourcemap: false,
-        swDest: 'sw.js' 
+    new InjectManifest({
+      // Path ke source service worker Anda
+      swSrc: path.resolve(__dirname, 'src/scripts/sw.js'),
+      // Nama file service worker yang akan dihasilkan di folder dist
+      swDest: 'sw.js',
     }),
   ],
 });

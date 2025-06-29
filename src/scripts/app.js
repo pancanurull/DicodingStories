@@ -13,6 +13,7 @@ class App {
         this.router = new RouterService();
         this.authModel = new AuthModel();
         this.notificationModel = new NotificationModel();
+        this.notificationButton = document.getElementById('notification-button');
     }
 
     async init() {
@@ -21,12 +22,7 @@ class App {
         this.setupMobileMenu();
         this.updateAuthUI();
         this.checkAuth();
-
-        // Inisialisasi notifikasi hanya sekali per session
-        if (!window._notificationInit && this.authModel.isAuthenticated()) {
-            await this.initNotifications();
-            window._notificationInit = true;
-        }
+        this._initNotificationButton();
     }
 
     setupMobileMenu() {
@@ -85,28 +81,22 @@ class App {
                 this.handleLogout();
             };
             authNavLink.classList.add('logout');
+            this.notificationButton.style.display = 'block';
         } else {
             authNavLink.innerHTML = '<i class="fas fa-sign-in-alt" aria-hidden="true"></i> Login';
             authNavLink.href = '#login';
             authNavLink.onclick = null;
             authNavLink.classList.remove('logout');
+            this.notificationButton.style.display = 'none';
         }
     }
 
     async handleLogout() {
         try {
+            await this._unsubscribe();
             await this.authModel.logout();
             this.updateAuthUI();
             this.router.navigate('login');
-            
-            // Hapus subscription notifikasi
-            if ('serviceWorker' in navigator) {
-                const registration = await navigator.serviceWorker.ready;
-                const subscription = await registration.pushManager.getSubscription();
-                if (subscription) {
-                    await this.notificationModel.unsubscribeFromNotifications(subscription.endpoint);
-                }
-            }
         } catch (error) {
             console.error('Logout failed:', error);
         }
@@ -123,77 +113,80 @@ class App {
         }
     }
 
-    async initNotifications() {
+    async _initNotificationButton() {
+        this.notificationButton.addEventListener('click', async () => {
+            const subscription = await this.notificationModel.registerServiceWorker().then(reg => reg.pushManager.getSubscription());
+            if (subscription) {
+                await this._unsubscribe();
+            } else {
+                await this._subscribe();
+            }
+        });
+        this._updateNotificationButtonUI();
+    }
+
+    async _updateNotificationButtonUI() {
+        const subscription = await this.notificationModel.registerServiceWorker().then(reg => reg.pushManager.getSubscription());
+        if (subscription) {
+            this.notificationButton.innerHTML = '<i class="fas fa-bell-slash"></i>';
+            this.notificationButton.setAttribute('aria-label', 'Nonaktifkan Notifikasi');
+        } else {
+            this.notificationButton.innerHTML = '<i class="fas fa-bell"></i>';
+            this.notificationButton.setAttribute('aria-label', 'Aktifkan Notifikasi');
+        }
+    }
+
+    async _subscribe() {
         try {
-            const permission = await this.notificationModel.checkNotificationPermission();
-            if (permission === 'default') {
-                const result = await this.notificationModel.requestNotificationPermission();
-                if (result !== 'granted') return;
-            } else if (permission !== 'granted') {
+            const permission = await this.notificationModel.requestNotificationPermission();
+            if (permission !== 'granted') {
+                alert('Izin notifikasi tidak diberikan.');
                 return;
             }
 
             const registration = await this.notificationModel.registerServiceWorker();
-            // CEK: Apakah sudah ada subscription aktif?
-            let subscription = await registration.pushManager.getSubscription();
-            if (subscription) {
-                console.log('[Notification] Sudah ada subscription aktif, tidak subscribe ulang.');
-            } else {
-                subscription = await this.notificationModel.createSubscription(registration);
-            }
+            const subscription = await this.notificationModel.createSubscription(registration);
             await this.notificationModel.subscribeToNotifications(subscription);
-            console.log('Push notifications subscribed');
+            
+            console.log('Successfully subscribed to push notifications.');
+            this._updateNotificationButtonUI();
         } catch (error) {
-            console.error('Notification setup failed:', error);
+            console.error('Failed to subscribe:', error);
+            alert('Gagal berlangganan notifikasi.');
+        }
+    }
+
+    async _unsubscribe() {
+        try {
+            const registration = await this.notificationModel.registerServiceWorker();
+            const subscription = await registration.pushManager.getSubscription();
+
+            if (subscription) {
+                await this.notificationModel.unsubscribeFromNotifications(subscription.endpoint);
+                await subscription.unsubscribe();
+                
+                console.log('Successfully unsubscribed from push notifications.');
+                this._updateNotificationButtonUI();
+            }
+        } catch (error) {
+            console.error('Failed to unsubscribe:', error);
+            alert('Gagal berhenti berlangganan notifikasi.');
         }
     }
 }
 
-    document.addEventListener('DOMContentLoaded', async () => {
-        const app = new App();
-        await app.init();
-        
-        window.navigateToPage = (page) => {
-            app.router.navigate(page);
-        };
-        
-        window.showRegisterForm = () => {
-            document.getElementById('register-section').style.display = 'block';
-        };
-    });
+document.addEventListener('DOMContentLoaded', async () => {
+    const app = new App();
+    window.app = app; // expose app instance to window
+    await app.init();
 
-App.prototype.updateOnlineStatus = function() {
-    const statusElement = document.createElement('div');
-    statusElement.id = 'network-status';
-    statusElement.style.position = 'fixed';
-    statusElement.style.bottom = '10px';
-    statusElement.style.right = '10px';
-    statusElement.style.padding = '8px 16px';
-    statusElement.style.borderRadius = '20px';
-    statusElement.style.zIndex = '1000';
-    
-    if (navigator.onLine) {
-        statusElement.textContent = 'Online';
-        statusElement.style.background = 'var(--success-gradient)';
-    } else {
-        statusElement.textContent = 'Offline';
-        statusElement.style.background = 'var(--secondary-gradient)';
-    }
-    
-    document.body.appendChild(statusElement);
-    
-    window.addEventListener('online', () => {
-        statusElement.textContent = 'Online';
-        statusElement.style.background = 'var(--success-gradient)';
-        setTimeout(() => {
-            statusElement.remove();
-        }, 3000);
-    });
-    
-    window.addEventListener('offline', () => {
-        statusElement.textContent = 'Offline';
-        statusElement.style.background = 'var(--secondary-gradient)';
-    });
-};
+    window.navigateToPage = (page) => {
+        app.router.navigate(page);
+    };
+
+    window.showRegisterForm = () => {
+        document.getElementById('register-section').style.display = 'block';
+    };
+});
 
 export default App;
