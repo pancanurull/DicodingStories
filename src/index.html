@@ -375,51 +375,71 @@
         function updateNotifBtn(state) {
             notifActive = state;
             notifBtn.innerHTML = notifActive ? '<i class="fas fa-bell"></i>' : '<i class="fas fa-bell-slash"></i>';
+            notifBtn.setAttribute('aria-label', notifActive ? 'Nonaktifkan Notifikasi' : 'Aktifkan Notifikasi');
         }
 
         notifBtn.addEventListener('click', async () => {
-            if (!('Notification' in window)) {
-                alert('Browser tidak mendukung notifikasi.');
-                return;
-            }
-            if (Notification.permission === 'denied') {
-                alert('Notifikasi diblokir di browser. Silakan aktifkan di pengaturan browser.');
-                return;
-            }
-            notifBtn.disabled = true;
-            notifBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            try {
-                if (!notifActive) {
-                    // Subscribe
-                    const permission = await Notification.requestPermission();
-                    if (permission !== 'granted') throw new Error('Izin notifikasi ditolak');
-                    if ('serviceWorker' in navigator) {
-                        const reg = await navigator.serviceWorker.ready;
-                        const app = window.app || (window.app = new App());
-                        await app.initNotifications();
-                        updateNotifBtn(true);
-                    }
-                } else {
-                    // Unsubscribe
-                    if ('serviceWorker' in navigator) {
-                        const reg = await navigator.serviceWorker.ready;
-                        const subs = await reg.pushManager.getSubscription();
-                        if (subs) await subs.unsubscribe();
+        if (!('Notification' in window)) {
+            alert('Browser tidak mendukung notifikasi.');
+            return;
+        }
+        if (Notification.permission === 'denied') {
+            alert('Notifikasi diblokir. Silakan aktifkan di pengaturan browser.');
+            return;
+        }
+
+        notifBtn.disabled = true;
+        notifBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        try {
+            if (!notifActive) {
+                // --- Proses Subscribe ---
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') throw new Error('Izin notifikasi ditolak');
+
+                if (window.app) {
+                    await window.app.initNotifications();
+                    updateNotifBtn(true);
+                    alert('Berhasil berlangganan notifikasi!');
+                }
+            } else {
+                // --- Proses Unsubscribe (YANG DIPERBAIKI) ---
+                if ('serviceWorker' in navigator && window.app) {
+                    const registration = await navigator.serviceWorker.ready;
+                    const subscription = await registration.pushManager.getSubscription();
+
+                    if (subscription) {
+                        // 1. Beri tahu server untuk menghapus subscription
+                        await window.app.notificationModel.unsubscribeFromNotifications(subscription.endpoint);
+
+                        // 2. Hapus subscription dari browser
+                        await subscription.unsubscribe();
+
                         updateNotifBtn(false);
+                        alert('Berhasil berhenti berlangganan notifikasi.');
                     }
                 }
-            } catch (e) {
-                alert('Gagal mengubah status notifikasi: ' + e.message);
             }
+        } catch (error) {
+            console.error('Gagal mengubah status notifikasi:', error);
+            alert('Gagal mengubah status notifikasi: ' + error.message);
+            updateNotifBtn(notifActive); // Kembalikan state tombol jika gagal
+        } finally {
             notifBtn.disabled = false;
-        });
+        }
+    });
 
         // Inisialisasi status tombol saat load
         window.addEventListener('DOMContentLoaded', async () => {
             if ('serviceWorker' in navigator) {
-                const reg = await navigator.serviceWorker.ready;
-                const subs = await reg.pushManager.getSubscription();
-                updateNotifBtn(!!subs);
+                try {
+                    const reg = await navigator.serviceWorker.ready;
+                    const subs = await reg.pushManager.getSubscription();
+                    updateNotifBtn(!!subs);
+                } catch(e) {
+                    console.error('Error checking notification subscription on load:', e);
+                    updateNotifBtn(false);
+                }
             }
         });
     </script>

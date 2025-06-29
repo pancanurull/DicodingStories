@@ -143,12 +143,12 @@ class App {
     }
 }
 
-    document.addEventListener('DOMContentLoaded', async () => {
-        const app = new App();
-        await app.init();
-        
+      document.addEventListener('DOMContentLoaded', async () => {
+        window.app = new App();
+        await window.app.init();
+
         window.navigateToPage = (page) => {
-            app.router.navigate(page);
+            window.app.router.navigate(page);
         };
         
         window.showRegisterForm = () => {
