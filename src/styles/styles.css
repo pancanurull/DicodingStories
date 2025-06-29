@@ -285,6 +285,9 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 .story-card-user {
   display: flex;
@@ -358,33 +361,29 @@
   flex-direction: column;
   transition: transform 0.18s, box-shadow 0.18s;
   position: relative;
-  max-width: 100%;
   margin: 0;
-  font-size: 0.97em;
-  min-height: 420px;
-  height: 100%;
-  /* Konsistensi shadow dan hover */
+  font-size: 0.95em;
   animation: fadeIn 0.3s ease forwards;
   opacity: 0;
-}
-.saved-story-card:hover {
-  transform: translateY(-6px) scale(1.025);
-  box-shadow: 0 8px 32px rgba(120,119,198,0.18);
+  min-width: 0;
+  min-height: 0;
 }
 .saved-story-card .story-card-img {
   width: 100%;
-  height: 220px;
+  height: 220px; /* dikembalikan ke 220px agar sama dengan card utama */
   object-fit: cover;
   border-top-left-radius: 18px;
   border-top-right-radius: 18px;
   background: #222;
 }
 .saved-story-card .story-card-content {
-  padding: 18px 20px 0 20px;
+  padding: 18px 20px 0 20px; /* disamakan dengan .story-card-content */
   display: flex;
   flex-direction: column;
   gap: 10px;
   flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 .saved-story-card .story-card-actions {
   display: flex;
@@ -415,6 +414,30 @@
 .saved-story-card .unsave-btn i {
   font-size: 1.2em;
   margin-right: 4px;
+}
+
+/* Saved Stories Grid Layout */
+.saved-stories-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px 16px;
+  margin: 32px 16px 32px 16px; /* margin atas, kanan, bawah, kiri membungkus semua card */
+  padding-left: 12px;
+  padding-right: 12px;
+}
+@media (max-width: 1024px) {
+  .saved-stories-grid {
+    grid-template-columns: repeat(2, 1fr);
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+@media (max-width: 600px) {
+  .saved-stories-grid {
+    grid-template-columns: 1fr;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
 }
 
 /* Forms */
@@ -1224,4 +1247,16 @@
 #login-page .btn-primary,
 #login-page .btn-secondary {
   font-size: 0.98rem;
+}
+
+h1 {
+  font-size: 2.2rem;
+  margin: 0 0 1.2rem 0;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+#saved-stories-title {
+  margin-left: 20px;
+  margin-bottom: 18px;
 }

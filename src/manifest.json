@@ -7,11 +7,6 @@
   "background_color": "#ffffff",
   "icons": [
     {
-      "src": "/icons/icon-48x48.png",
-      "sizes": "48x48",
-      "type": "image/png"
-    },
-    {
       "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
@@ -30,8 +25,8 @@
       "url": "/#add-story",
       "icons": [
         {
-          "src": "/icons/icon-96x96.png",
-          "sizes": "96x96",
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192",
           "type": "image/png"
         }
       ]
@@ -40,7 +35,7 @@
   "screenshots": [
     {
       "src": "/screenshots/desktop.jpg",
-      "sizes": "1280x720",
+      "sizes": "1881x1001",
       "type": "image/jpeg",
       "form_factor": "wide"
     },

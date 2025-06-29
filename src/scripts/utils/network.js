@@ -18,7 +18,9 @@ export class NetworkUtils {
         headers,
       });
 
-      return response.ok;
+      // Anggap online jika status 200, 401, 403, 405
+      if ([200, 401, 403, 405].includes(response.status)) return true;
+      return false;
     } catch (err) {
       console.error('Connection check failed:', err);
       return false;

@@ -15,57 +15,62 @@ export class NotificationModel {
                 throw new Error('Anda harus login untuk menerima notifikasi.');
             }
 
-            const subscriptionPayload = {
-                endpoint: subscription.endpoint,
+            console.log('[Notification] Attempting to subscribe with token:', token);
+            console.log('[Notification] Subscription object:', subscription);
+
+            // Kirim hanya field yang dibutuhkan API Dicoding
+            let subObj = subscription.toJSON ? subscription.toJSON() : subscription;
+            const filteredSubscription = {
+                endpoint: subObj.endpoint,
                 keys: {
-                    p256dh: subscription.toJSON().keys.p256dh,
-                    auth: subscription.toJSON().keys.auth,
-                },
+                    p256dh: subObj.keys?.p256dh,
+                    auth: subObj.keys?.auth
+                }
             };
 
-            console.log('✅ [NotificationModel] Mengirim payload bersih ke API:', subscriptionPayload);
-
-            const response = await this.apiService.subscribeNotification(subscriptionPayload, token);
-
-            // TAMBAHKAN LOG INI UNTUK MELIHAT RESPON RAW DARI API
-            console.log('✅ [NotificationModel] Respon dari API:', response);
-
-            if (response.error) {
-                // Lempar error jika API mengembalikan status error
-                throw new Error(response.message || 'API mengembalikan error saat subscribe.');
-            }
-            
-            return response; // Langsung kembalikan response jika sukses
-        } catch (error) {
-            // Log error yang lebih spesifik
-            console.error('❌ [NotificationModel] Gagal total saat subscribe:', error.message);
-            throw error;
-        }
-    }
-
-    async unsubscribeFromNotifications(endpoint) {
-        try {
-            console.log('🔔 [NotificationModel] Attempting to unsubscribe...');
-            const token = this.storageService.getToken();
-            if (!token) {
-                console.log('🔑 No token found, cannot unsubscribe from server.');
-                return { success: false, message: 'User not logged in.' };
-            }
-
-            const response = await this.apiService.unsubscribeNotification({ endpoint }, token);
-            console.log('✅ [NotificationModel] Unsubscribe response from API:', response);
+            const response = await this.apiService.subscribeNotification(filteredSubscription, token);
+            console.log('[Notification] Subscribe response:', response);
             return this.apiService.validateResponse(response);
         } catch (error) {
-            console.error('❌ [NotificationModel] Failed to unsubscribe:', error);
+            console.error('[Notification] Failed to subscribe:', error);
             throw error;
         }
-    }
+    }    async unsubscribeFromNotifications(endpoint) {
+        try {
+            console.log('[Notification] Starting unsubscribe process...');
+            
+            const token = this.storageService.getToken();
+            if (!token) {
+                console.log('[Notification] No token found for unsubscribe');
+                return { success: false };
+            }
 
-    async checkNotificationPermission() {
+            console.log('[Notification] Unsubscribing endpoint:', endpoint);
+            const response = await this.apiService.unsubscribeNotification({ endpoint }, token);
+            console.log('[Notification] Unsubscribe response:', response);
+            
+            return this.apiService.validateResponse(response);
+        } catch (error) {
+            console.error('[Notification] Failed to unsubscribe:', error);
+            throw error;
+        }
+    }async checkNotificationPermission() {
+        console.log('[Notification] Checking notification permission...');
+        
         if (!('Notification' in window)) {
+            console.log('[Notification] Notifications not supported in this browser');
             return 'not-supported';
         }
-        return Notification.permission;
+
+        console.log('[Notification] Current permission status:', Notification.permission);
+        
+        if (Notification.permission === 'granted') {
+            return 'granted';
+        } else if (Notification.permission === 'denied') {
+            return 'denied';
+        } else {
+            return 'default';
+        }
     }
 
     async requestNotificationPermission() {
@@ -89,14 +94,17 @@ export class NotificationModel {
             console.error('Service worker registration failed:', error);
             throw error;
         }
-    }
-
-    async createSubscription(registration) {
+    }    async createSubscription(registration) {
         try {
+            console.log('[Notification] Starting subscription creation...');
+            console.log('[Notification] Using VAPID key:', this.publicVapidKey);
+            
             const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: this.urlBase64ToUint8Array(this.publicVapidKey)
             });
+            
+            console.log('[Notification] Subscription created successfully:', subscription);
             return subscription;
         } catch (error) {
             console.error('[Notification] Failed to create push subscription:', error);

@@ -13,7 +13,7 @@ export default class SavedStoriesView {
   async render() {
     const container = document.getElementById('saved-stories-page');
     if (!container) return;
-    container.innerHTML = '<h2>Story Tersimpan (Offline)</h2><div id="saved-stories-list">Memuat...</div>';
+    container.innerHTML = '<h2 id="saved-stories-title">Story Tersimpan</h2><div id="saved-stories-list" class="saved-stories-grid">Memuat...</div>';
     const stories = await getAllSavedStories();
     const listDiv = document.getElementById('saved-stories-list');
     if (!stories || stories.length === 0) {
