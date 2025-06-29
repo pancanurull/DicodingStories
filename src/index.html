@@ -8,19 +8,15 @@
     <link rel="manifest" href="/manifest.json" crossorigin="use-credentials">
     <link rel="icon" href="/icons/icon-48x48.png">
 
-    <!-- Preload critical resources -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style">
     
-    <!-- Styles -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     
-    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📖%3C/text%3E%3C/svg%3E">
     
-    <!-- PWA Meta -->
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
@@ -59,7 +55,6 @@
     </header>
 
     <main id="main-content" role="main">
-        <!-- Home Page -->
         <section id="home-page" class="page-section active" role="main" aria-labelledby="home-title">
             <div class="container home-instagram-style">
                 <div class="hero">
@@ -87,7 +82,6 @@
             </div>
         </section>
 
-        <!-- Stories Page -->
         <section id="stories-page" class="page-section" role="main" aria-labelledby="stories-title">
             <div class="container">
                 <h1 id="stories-title">Semua Stories</h1>
@@ -98,12 +92,10 @@
                     <div class="spinner"></div>
                 </div>
                 <div class="stories-grid" id="stories-container">
-                    <!-- Stories will be loaded here -->
-                </div>
+                    </div>
             </div>
         </section>
 
-        <!-- Add Story Page -->
         <section id="add-story-page" class="page-section" role="main" aria-labelledby="add-story-title" style="display: none;">
             <div class="container">
                 <h1 id="add-story-title">Tambah Story Baru</h1>
@@ -162,7 +154,6 @@
             </div>
         </section>
 
-        <!-- Login Page -->
         <section id="login-page" class="page-section" role="main" aria-labelledby="login-title">
             <div class="container">
                 <div class="glass-card" style="max-width: 400px; margin: 48px auto 0 auto;">
@@ -262,11 +253,9 @@
             </div>
         </section>
 
-        <!-- Saved Stories Page -->
         <section id="saved-stories-page" class="page-section" role="main" aria-labelledby="saved-stories-title">
             <div class="container">
-                <!-- Konten akan di-render oleh SavedStoriesView.js -->
-            </div>
+                </div>
         </section>
 
         <section id="not-found-page" class="page-section">
@@ -360,60 +349,11 @@
             loginRegisterToggle.style.display = '';
         });
 
-        // Notifikasi toggle logic
-        const notifBtn = document.getElementById('notif-toggle-btn');
-        let notifActive = false;
+        // --- PERBAIKAN ---
+        // Pindahkan semua logika notifikasi ke dalam App.js atau modul yang relevan.
+        // Cukup inisialisasi aplikasi utama di sini.
+        // Logika notifikasi akan dipanggil dari dalam App.js setelah DOM siap.
 
-        function updateNotifBtn(state) {
-            notifActive = state;
-            notifBtn.innerHTML = notifActive ? '<i class="fas fa-bell"></i>' : '<i class="fas fa-bell-slash"></i>';
-        }
-
-        notifBtn.addEventListener('click', async () => {
-            if (!('Notification' in window)) {
-                alert('Browser tidak mendukung notifikasi.');
-                return;
-            }
-            if (Notification.permission === 'denied') {
-                alert('Notifikasi diblokir di browser. Silakan aktifkan di pengaturan browser.');
-                return;
-            }
-            notifBtn.disabled = true;
-            notifBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            try {
-                if (!notifActive) {
-                    // Subscribe
-                    const permission = await Notification.requestPermission();
-                    if (permission !== 'granted') throw new Error('Izin notifikasi ditolak');
-                    if ('serviceWorker' in navigator) {
-                        const reg = await navigator.serviceWorker.ready;
-                        const app = window.app || (window.app = new App());
-                        await app.initNotifications();
-                        updateNotifBtn(true);
-                    }
-                } else {
-                    // Unsubscribe
-                    if ('serviceWorker' in navigator) {
-                        const reg = await navigator.serviceWorker.ready;
-                        const subs = await reg.pushManager.getSubscription();
-                        if (subs) await subs.unsubscribe();
-                        updateNotifBtn(false);
-                    }
-                }
-            } catch (e) {
-                alert('Gagal mengubah status notifikasi: ' + e.message);
-            }
-            notifBtn.disabled = false;
-        });
-
-        // Inisialisasi status tombol saat load
-        window.addEventListener('DOMContentLoaded', async () => {
-            if ('serviceWorker' in navigator) {
-                const reg = await navigator.serviceWorker.ready;
-                const subs = await reg.pushManager.getSubscription();
-                updateNotifBtn(!!subs);
-            }
-        });
     </script>
     <script src="app.bundle.js"></script>
 </body>

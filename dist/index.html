@@ -47,57 +47,7 @@
             loginRegisterToggle.style.display = '';
         });
 
-        // Notifikasi toggle logic
-        const notifBtn = document.getElementById('notif-toggle-btn');
-        let notifActive = false;
-
-        function updateNotifBtn(state) {
-            notifActive = state;
-            notifBtn.innerHTML = notifActive ? '<i class="fas fa-bell"></i>' : '<i class="fas fa-bell-slash"></i>';
-        }
-
-        notifBtn.addEventListener('click', async () => {
-            if (!('Notification' in window)) {
-                alert('Browser tidak mendukung notifikasi.');
-                return;
-            }
-            if (Notification.permission === 'denied') {
-                alert('Notifikasi diblokir di browser. Silakan aktifkan di pengaturan browser.');
-                return;
-            }
-            notifBtn.disabled = true;
-            notifBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            try {
-                if (!notifActive) {
-                    // Subscribe
-                    const permission = await Notification.requestPermission();
-                    if (permission !== 'granted') throw new Error('Izin notifikasi ditolak');
-                    if ('serviceWorker' in navigator) {
-                        const reg = await navigator.serviceWorker.ready;
-                        const app = window.app || (window.app = new App());
-                        await app.initNotifications();
-                        updateNotifBtn(true);
-                    }
-                } else {
-                    // Unsubscribe
-                    if ('serviceWorker' in navigator) {
-                        const reg = await navigator.serviceWorker.ready;
-                        const subs = await reg.pushManager.getSubscription();
-                        if (subs) await subs.unsubscribe();
-                        updateNotifBtn(false);
-                    }
-                }
-            } catch (e) {
-                alert('Gagal mengubah status notifikasi: ' + e.message);
-            }
-            notifBtn.disabled = false;
-        });
-
-        // Inisialisasi status tombol saat load
-        window.addEventListener('DOMContentLoaded', async () => {
-            if ('serviceWorker' in navigator) {
-                const reg = await navigator.serviceWorker.ready;
-                const subs = await reg.pushManager.getSubscription();
-                updateNotifBtn(!!subs);
-            }
-        });</script><script src="app.bundle.js"></script></body></html>
+        // --- PERBAIKAN ---
+        // Pindahkan semua logika notifikasi ke dalam App.js atau modul yang relevan.
+        // Cukup inisialisasi aplikasi utama di sini.
+        // Logika notifikasi akan dipanggil dari dalam App.js setelah DOM siap.</script><script src="app.bundle.js"></script></body></html>
