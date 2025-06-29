@@ -1,11 +1,6 @@
 import { RouterService } from './services/RouterService.js';
-import { HomeView } from './views/HomeView.js';
-import { StoriesView } from './views/StoriesView.js';
-import { AddStoryView } from './views/AddStoryView.js';
-import { LoginView } from './views/LoginView.js';
 import { AuthModel } from './models/AuthModel.js';
 import { NotificationModel } from './models/NotificationModel.js';
-import SavedStoriesView from './views/SavedStoriesView.js';
 import { registerRoutes } from './routes/router.js';
 
 class App {
@@ -13,7 +8,8 @@ class App {
         this.router = new RouterService();
         this.authModel = new AuthModel();
         this.notificationModel = new NotificationModel();
-        this.notificationButton = document.getElementById('notification-button');
+        // Kita akan mengambil elemen ini lagi di dalam init untuk memastikan
+        this.notificationButton = null; 
     }
 
     async init() {
@@ -29,7 +25,8 @@ class App {
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         const navLinks = document.getElementById('nav-links');
         
-        // Handle menu button click
+        if (mobileMenuBtn.dataset.listenerAttached) return;
+
         mobileMenuBtn.addEventListener('click', () => {
             const isExpanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
             mobileMenuBtn.setAttribute('aria-expanded', !isExpanded);
@@ -37,7 +34,7 @@ class App {
             navLinks.classList.toggle('active');
         });
 
-        // Close menu when clicking outside
+        // Logika menu lainnya...
         document.addEventListener('click', (event) => {
             if (!event.target.closest('#mobile-menu-btn') && 
                 !event.target.closest('#nav-links') && 
@@ -48,7 +45,6 @@ class App {
             }
         });
 
-        // Close menu when clicking on a link
         navLinks.addEventListener('click', (event) => {
             if (event.target.tagName === 'A') {
                 navLinks.classList.remove('active');
@@ -57,7 +53,6 @@ class App {
             }
         });
 
-        // Handle escape key
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape' && navLinks.classList.contains('active')) {
                 navLinks.classList.remove('active');
@@ -65,13 +60,14 @@ class App {
                 mobileMenuBtn.setAttribute('aria-expanded', 'false');
             }
         });
+        
+        mobileMenuBtn.dataset.listenerAttached = 'true';
     }
 
     updateAuthUI() {
-        const authNavItem = document.getElementById('auth-nav-item');
         const authNavLink = document.getElementById('auth-nav-link');
-        
-        if (!authNavItem || !authNavLink) return;
+        const notificationButton = document.getElementById('notification-button');
+        if (!authNavLink || !notificationButton) return;
         
         if (this.authModel.isAuthenticated()) {
             authNavLink.innerHTML = '<i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout';
@@ -80,20 +76,19 @@ class App {
                 e.preventDefault();
                 this.handleLogout();
             };
-            authNavLink.classList.add('logout');
-            this.notificationButton.style.display = 'block';
+            notificationButton.style.display = 'block';
         } else {
             authNavLink.innerHTML = '<i class="fas fa-sign-in-alt" aria-hidden="true"></i> Login';
             authNavLink.href = '#login';
             authNavLink.onclick = null;
-            authNavLink.classList.remove('logout');
-            this.notificationButton.style.display = 'none';
+            notificationButton.style.display = 'none';
         }
     }
 
     async handleLogout() {
         try {
-            await this._unsubscribe();
+            // Kita tidak perlu unsubscribe saat logout jika tidak diminta
+            // await this._unsubscribe(); 
             await this.authModel.logout();
             this.updateAuthUI();
             this.router.navigate('login');
@@ -113,7 +108,19 @@ class App {
         }
     }
 
-    async _initNotificationButton() {
+    _initNotificationButton() {
+        // --- PERBAIKAN UTAMA: MEMBERSIHKAN EVENT LISTENER SECARA PAKSA ---
+        const oldButton = document.getElementById('notification-button');
+        if (!oldButton) return;
+
+        // 1. Buat klon dari tombol. Proses ini tidak menyalin event listener.
+        const newButton = oldButton.cloneNode(true);
+
+        // 2. Ganti tombol lama dengan tombol baru yang bersih di dalam DOM.
+        oldButton.parentNode.replaceChild(newButton, oldButton);
+
+        // 3. Simpan referensi ke tombol baru dan tambahkan SATU listener.
+        this.notificationButton = newButton;
         this.notificationButton.addEventListener('click', async () => {
             const subscription = await this.notificationModel.registerServiceWorker().then(reg => reg.pushManager.getSubscription());
             if (subscription) {
@@ -122,6 +129,8 @@ class App {
                 await this._subscribe();
             }
         });
+        // --- AKHIR PERBAIKAN ---
+
         this._updateNotificationButtonUI();
     }
 
@@ -137,6 +146,10 @@ class App {
     }
 
     async _subscribe() {
+        // Tambahkan dialog konfirmasi yang sudah ada
+        const result = confirm("Apakah Anda yakin ingin mengaktifkan notifikasi?");
+        if (!result) return;
+
         try {
             const permission = await this.notificationModel.requestNotificationPermission();
             if (permission !== 'granted') {
@@ -157,6 +170,10 @@ class App {
     }
 
     async _unsubscribe() {
+        // Tambahkan dialog konfirmasi yang sudah ada
+        const result = confirm("Apakah Anda yakin ingin menonaktifkan notifikasi?");
+        if (!result) return;
+        
         try {
             const registration = await this.notificationModel.registerServiceWorker();
             const subscription = await registration.pushManager.getSubscription();
@@ -174,19 +191,5 @@ class App {
         }
     }
 }
-
-document.addEventListener('DOMContentLoaded', async () => {
-    const app = new App();
-    window.app = app; // expose app instance to window
-    await app.init();
-
-    window.navigateToPage = (page) => {
-        app.router.navigate(page);
-    };
-
-    window.showRegisterForm = () => {
-        document.getElementById('register-section').style.display = 'block';
-    };
-});
 
 export default App;
