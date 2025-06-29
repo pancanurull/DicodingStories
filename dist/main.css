@@ -248,9 +248,7 @@
         }
 
         /* Stories Grid */
-
-
-.stories-grid {
+        .stories-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 32px 24px;
@@ -417,19 +415,6 @@
 .saved-story-card .unsave-btn i {
   font-size: 1.2em;
   margin-right: 4px;
-}
-
-#saved-stories-list {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* Membuat 3 kolom */
-  gap: 1.5rem; /* Memberi jarak antar kartu */
-  margin-top: 1.5rem;
-}
-
-/* Menyesuaikan ukuran kartu di dalam grid tersimpan */
-#saved-stories-list .saved-story-card {
-  min-height: auto; /* Hapus min-height agar ukuran kartu lebih fleksibel */
-  height: auto;
 }
 
 /* Forms */

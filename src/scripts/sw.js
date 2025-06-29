@@ -45,18 +45,23 @@ registerRoute(
 
 self.addEventListener('push', (event) => {
   console.log('Service worker pushing...');
-  
-  const showNotification = async () => {
+  async function chainPromise() {
     try {
       const data = await event.data.json();
-      await self.registration.showNotification(data.title, data.options);
+      await self.registration.showNotification(data.title, {
+        body: data.options.body,
+        icon: data.options.icon || '/icons/icon-192x192.png', // Tambahkan ikon default
+        badge: data.options.badge || '/icons/icon-96x96.png', // Tambahkan badge default
+        ...data.options, // Sertakan semua options lain dari server
+      });
     } catch (error) {
       console.error('Error handling push event:', error);
+      // Fallback notification jika payload bukan JSON
       await self.registration.showNotification('Pemberitahuan Baru', {
-        body: 'Anda memiliki pesan baru.',
+        body: event.data ? event.data.text() : 'Anda memiliki pesan baru.',
+        icon: '/icons/icon-192x192.png'
       });
     }
-  };
-
-  event.waitUntil(showNotification());
+  }
+  event.waitUntil(chainPromise());
 });

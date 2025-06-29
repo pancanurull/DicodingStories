@@ -8,19 +8,15 @@
     <link rel="manifest" href="/manifest.json" crossorigin="use-credentials">
     <link rel="icon" href="/icons/icon-48x48.png">
 
-    <!-- Preload critical resources -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style">
     
-    <!-- Styles -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     
-    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📖%3C/text%3E%3C/svg%3E">
     
-    <!-- PWA Meta -->
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
@@ -67,7 +63,6 @@
     </header>
 
     <main id="main-content" role="main">
-        <!-- Home Page -->
         <section id="home-page" class="page-section active" role="main" aria-labelledby="home-title">
             <div class="container home-instagram-style">
                 <div class="hero">
@@ -95,7 +90,6 @@
             </div>
         </section>
 
-        <!-- Stories Page -->
         <section id="stories-page" class="page-section" role="main" aria-labelledby="stories-title">
             <div class="container">
                 <h1 id="stories-title">Semua Stories</h1>
@@ -106,12 +100,10 @@
                     <div class="spinner"></div>
                 </div>
                 <div class="stories-grid" id="stories-container">
-                    <!-- Stories will be loaded here -->
-                </div>
+                    </div>
             </div>
         </section>
 
-        <!-- Add Story Page -->
         <section id="add-story-page" class="page-section" role="main" aria-labelledby="add-story-title" style="display: none;">
             <div class="container">
                 <h1 id="add-story-title">Tambah Story Baru</h1>
@@ -170,7 +162,6 @@
             </div>
         </section>
 
-        <!-- Login Page -->
         <section id="login-page" class="page-section" role="main" aria-labelledby="login-title">
             <div class="container">
                 <div class="glass-card" style="max-width: 400px; margin: 48px auto 0 auto;">
@@ -270,11 +261,9 @@
             </div>
         </section>
 
-        <!-- Saved Stories Page -->
         <section id="saved-stories-page" class="page-section" role="main" aria-labelledby="saved-stories-title">
             <div class="container">
-                <!-- Konten akan di-render oleh SavedStoriesView.js -->
-            </div>
+                </div>
         </section>
 
         <section id="not-found-page" class="page-section">
@@ -318,12 +307,16 @@
     </footer>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script src="app.bundle.js"></script>
+    
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
                     .then(registration => {
                         console.log('SW registered: ', registration);
+                        updateNotifBtnUI();
                     })
                     .catch(registrationError => {
                         console.log('SW registration failed: ', registrationError);
@@ -340,73 +333,76 @@
                 const subs = await reg.pushManager.getSubscription();
                 
                 if (subs) {
-                    notifBtn.innerHTML = '<i class="fas fa-bell"></i>';
+                    notifBtn.innerHTML = '<i class="fas fa-bell-slash"></i>';
                     notifBtn.setAttribute('aria-label', 'Nonaktifkan Notifikasi');
                     notifBtn.dataset.subscribed = 'true';
                 } else {
-                    notifBtn.innerHTML = '<i class="fas fa-bell-slash"></i>';
+                    notifBtn.innerHTML = '<i class="fas fa-bell"></i>';
                     notifBtn.setAttribute('aria-label', 'Aktifkan Notifikasi');
                     notifBtn.dataset.subscribed = 'false';
                 }
             } catch (e) {
-                console.error('Error checking notification subscription on load:', e);
-                notifBtn.innerHTML = '<i class="fas fa-bell-slash"></i>';
+                console.error('Error checking notification subscription:', e);
+                notifBtn.innerHTML = '<i class="fas fa-bell"></i>';
                 notifBtn.dataset.subscribed = 'false';
             }
         }
 
         notifBtn.addEventListener('click', async () => {
-            if (!('Notification' in window)) {
+            if (!('Notification' in window) || !('PushManager' in window) || !('serviceWorker' in navigator)) {
                 alert('Browser tidak mendukung notifikasi.');
                 return;
             }
 
-            if (Notification.permission === 'denied') {
-                alert('Notifikasi diblokir. Silakan aktifkan di pengaturan browser.');
-                return;
-            }
-
-            notifBtn.disabled = true;
-            notifBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
             const isSubscribed = notifBtn.dataset.subscribed === 'true';
 
-            try {
-                if (isSubscribed) {
-                    // --- Proses Unsubscribe ---
-                    if ('serviceWorker' in navigator && window.app) {
-                        const registration = await navigator.serviceWorker.ready;
-                        const subscription = await registration.pushManager.getSubscription();
-                        if (subscription) {
-                            await window.app.notificationModel.unsubscribeFromNotifications(subscription.endpoint);
-                            await subscription.unsubscribe();
-                        }
+            if (isSubscribed) {
+                const registration = await navigator.serviceWorker.ready;
+                const subscription = await registration.pushManager.getSubscription();
+                if (subscription) {
+                    await subscription.unsubscribe();
+                    alert('Berhasil berhenti berlangganan notifikasi.');
+                    await updateNotifBtnUI();
+                }
+            } else {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    const registration = await navigator.serviceWorker.ready;
+                    const vapidPublicKey = 'BCCs2eonMI-6H2ctvFaWg-UYdDv387Vno_bzUzALpB442r2lCnsHmtrx8biyPi_E-1fSGABK_Qs_GlvPoJJqxbk';
+                    try {
+                        const subscription = await registration.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: window.app.notificationModel.urlBase64ToUint8Array(vapidPublicKey),
+                        });
+                        
+                        await window.app.notificationModel.subscribeToNotifications(subscription);
+                        alert('Berhasil berlangganan notifikasi!');
                         await updateNotifBtnUI();
-                        alert('Berhasil berhenti berlangganan notifikasi.');
+                    } catch(e) {
+                        console.error('Gagal subscribe atau mengirim ke server:', e);
+                        const sub = await registration.pushManager.getSubscription();
+                        if (sub) {
+                            await sub.unsubscribe();
+                        }
+                        alert('Gagal berlangganan, silakan coba lagi.');
+                        await updateNotifBtnUI();
                     }
                 } else {
-                    // --- Proses Subscribe ---
-                    const permission = await Notification.requestPermission();
-                    if (permission !== 'granted') throw new Error('Izin notifikasi ditolak');
-                    
-                    if (window.app) {
-                        await window.app.handleSubscribeClick(); // Panggil method baru di app.js
-                        await updateNotifBtnUI();
-                        alert('Berhasil berlangganan notifikasi!');
-                    }
+                    alert('Izin notifikasi tidak diberikan.');
                 }
-            } catch (error) {
-                console.error('Gagal mengubah status notifikasi:', error);
-                alert('Gagal mengubah status notifikasi: ' + error.message);
-                await updateNotifBtnUI(); // Kembalikan UI tombol ke state yang benar
-            } finally {
-                notifBtn.disabled = false;
             }
         });
 
-        // Inisialisasi status tombol saat load
-        window.addEventListener('DOMContentLoaded', updateNotifBtnUI);
+        // Panggil saat halaman dimuat, setelah app.bundle.js siap
+        window.addEventListener('DOMContentLoaded', () => {
+             // Pastikan object `app` sudah ada sebelum menjalankan logic notifikasi
+            if (window.app) {
+                updateNotifBtnUI();
+            } else {
+                // Coba lagi setelah sedikit delay jika app belum siap
+                setTimeout(updateNotifBtnUI, 500);
+            }
+        });
     </script>
-    <script src="app.bundle.js"></script>
 </body>
 </html>
