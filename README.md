@@ -2,7 +2,7 @@
 
 **Dicoding Stories** adalah aplikasi **Progressive Web App (PWA)** yang memungkinkan pengguna berbagi cerita menarik, lengkap dengan foto dan lokasi. Proyek ini dibuat sebagai bagian dari kelas **"Belajar Fundamental Front-End Web Development"** di [Dicoding Indonesia](https://www.dicoding.com/).
 
-🚀 **Live Demo:** https://dicoding-stories-page.netlify.app/
+🚀 **Live Demo:** https://dicodingstoriesapps.netlify.app/
 
 ---
 

@@ -1,1 +1,1 @@
-Netlify : https://dicodingstoriesapp.netlify.app/
+Netlify : https://dicodingstoriesapps.netlify.app/
