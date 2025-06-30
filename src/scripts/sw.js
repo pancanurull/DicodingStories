@@ -49,15 +49,26 @@ registerRoute(
 
 // Event listener untuk push notification
 self.addEventListener('push', (event) => {
-  console.log('Service Worker: Pushing message...');
+  console.log('Service Worker: Push message received');
 
-  const notificationData = event.data.json();
+  // Data notifikasi statis
+  const notificationData = {
+    title: 'Tes Notifikasi',
+    options: {
+      body: 'Ini adalah notifikasi kustom!',
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-192x192.png',
+      data: {},
+    },
+  };
+
   const { title, options } = notificationData;
 
+  // Tampilkan notifikasi
   const showNotification = self.registration.showNotification(title, {
     body: options.body,
-    icon: options.icon || '/icons/icon-192x192.png',
-    badge: options.badge || '/icons/icon-192x192.png',
+    icon: options.icon,
+    badge: options.badge,
     data: options.data,
   });
 

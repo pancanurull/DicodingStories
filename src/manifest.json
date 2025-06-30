@@ -38,12 +38,6 @@
       "sizes": "1881x1001",
       "type": "image/jpeg",
       "form_factor": "wide"
-    },
-    {
-      "src": "/screenshots/mobile.png",
-      "sizes": "750x1334",
-      "type": "image/png",
-      "form_factor": "narrow"
     }
   ]
 }
